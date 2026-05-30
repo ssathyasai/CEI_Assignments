@@ -5,4 +5,4 @@ This repository contains my weekly assignment submissions for the Celebal Excell
 
 ## Author
 
-**Sathyasai**
+**S.SATHYASAI**
