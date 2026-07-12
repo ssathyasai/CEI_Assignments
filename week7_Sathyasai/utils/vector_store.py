@@ -59,9 +59,17 @@ class VectorStoreManager:
     
     def load_vector_store(self, path: str = "./vector_store"):
         """Load vector store from disk."""
-        self.vector_store = FAISS.load_local(
-            path, 
-            self.embeddings,
-            allow_dangerous_deserialization=True
-        )
+        try:
+            self.vector_store = FAISS.load_local(
+                path, 
+                self.embeddings,
+                allow_dangerous_deserialization=True
+            )
+        except TypeError:
+            # Fallback for older LangChain versions that don't support allow_dangerous_deserialization
+            self.vector_store = FAISS.load_local(
+                path, 
+                self.embeddings
+            )
         return self.vector_store
+
