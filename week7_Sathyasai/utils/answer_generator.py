@@ -5,8 +5,8 @@ Handles LLM-based answer generation using Google Gemini
 
 from typing import Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain.chains.retrieval_qa.base import RetrievalQA
+from langchain_core.prompts import PromptTemplate
 
 
 class AnswerGenerator:
