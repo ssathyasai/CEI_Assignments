@@ -1,6 +1,4 @@
-import os
-import PyPDF2
-from typing import List, Union
+import pypdf
 from pathlib import Path
 
 class DocumentIngestion:
@@ -26,11 +24,8 @@ class DocumentIngestion:
     
     def _load_pdf(self, file_path: Path) -> str:
         text = ""
-        try:
-            with open(file_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                for page in pdf_reader.pages:
-                    text += page.extract_text() + "\n"
-            return text
-        except Exception as e:
-            raise Exception(f"Error reading PDF: {str(e)}")
+        with open(file_path, 'rb') as file:
+            pdf_reader = pypdf.PdfReader(file)
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+        return text
