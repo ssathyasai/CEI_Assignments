@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+sample_documents/
+vector_index.faiss
+chunk_store.pkl
+.venv/
