@@ -1,8 +1,9 @@
 """Answer Generation Module - Uses Groq LLM"""
 from typing import Dict, Any
 from langchain_groq import ChatGroq
-from langchain.chains import RetrievalQA
-from langchain_core.prompts import PromptTemplate
+from langchain.chains import create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate
 
 
 class AnswerGenerator:
@@ -18,30 +19,27 @@ class AnswerGenerator:
         )
         
         # Create prompt template
-        prompt_template = """You are a helpful AI assistant. Answer the question based ONLY on the context provided.
+        self.prompt = ChatPromptTemplate.from_template(
+            """You are a helpful AI assistant. Answer the question based ONLY on the context provided.
 If the answer is not in the context, say "I cannot answer based on the provided documents."
 
 Context:
 {context}
 
-Question: {question}
+Question: {input}
 
 Answer:"""
-        
-        self.prompt = PromptTemplate(
-            template=prompt_template,
-            input_variables=["context", "question"]
         )
         
-        # Create QA chain
-        self.qa_chain = RetrievalQA.from_chain_type(
-            llm=self.llm,
-            chain_type="stuff",
-            retriever=retriever,
-            return_source_documents=True,
-            chain_type_kwargs={"prompt": self.prompt}
-        )
+        # Create chains
+        doc_chain = create_stuff_documents_chain(self.llm, self.prompt)
+        self.qa_chain = create_retrieval_chain(retriever, doc_chain)
     
     def generate_answer(self, query: str) -> Dict[str, Any]:
         """Generate answer for query"""
-        return self.qa_chain.invoke({"query": query})
+        result = self.qa_chain.invoke({"input": query})
+        # Convert to old format for compatibility
+        return {
+            "result": result["answer"],
+            "source_documents": result.get("context", [])
+        }
