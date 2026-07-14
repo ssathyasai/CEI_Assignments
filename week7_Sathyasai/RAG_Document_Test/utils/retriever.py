@@ -16,7 +16,7 @@ class RetrievalSystem:
     
     def retrieve(self, query: str) -> List[Document]:
         """Retrieve relevant documents for query"""
-        return self.retriever.get_relevant_documents(query)
+        return self.retriever.invoke(query)
     
     def get_retriever(self):
         """Get the retriever object"""
