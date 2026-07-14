@@ -1,9 +1,9 @@
 """Answer Generation Module - Uses Groq LLM"""
 from typing import Dict, Any
 from langchain_groq import ChatGroq
-from langchain.chains.retrieval import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
 
 
 class AnswerGenerator:
@@ -18,6 +18,8 @@ class AnswerGenerator:
             max_tokens=1024
         )
         
+        self.retriever = retriever
+        
         # Create prompt template
         self.prompt = ChatPromptTemplate.from_template(
             """You are a helpful AI assistant. Answer the question based ONLY on the context provided.
@@ -26,20 +28,32 @@ If the answer is not in the context, say "I cannot answer based on the provided 
 Context:
 {context}
 
-Question: {input}
+Question: {question}
 
 Answer:"""
         )
         
-        # Create chains
-        doc_chain = create_stuff_documents_chain(self.llm, self.prompt)
-        self.qa_chain = create_retrieval_chain(retriever, doc_chain)
+        # Create simple RAG chain
+        def format_docs(docs):
+            return "\n\n".join(doc.page_content for doc in docs)
+        
+        self.rag_chain = (
+            {"context": retriever | format_docs, "question": RunnablePassthrough()}
+            | self.prompt
+            | self.llm
+            | StrOutputParser()
+        )
     
     def generate_answer(self, query: str) -> Dict[str, Any]:
         """Generate answer for query"""
-        result = self.qa_chain.invoke({"input": query})
-        # Convert to old format for compatibility
+        # Get answer
+        answer = self.rag_chain.invoke(query)
+        
+        # Get source documents
+        docs = self.retriever.get_relevant_documents(query)
+        
+        # Return in expected format
         return {
-            "result": result["answer"],
-            "source_documents": result.get("context", [])
+            "result": answer,
+            "source_documents": docs
         }
