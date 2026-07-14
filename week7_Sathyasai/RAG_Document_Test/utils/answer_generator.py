@@ -100,8 +100,8 @@ Answer:"""
             else:
                 raise
         
-        # Get source documents
-        docs = self.retriever.get_relevant_documents(query)
+        # Get source documents using invoke instead of get_relevant_documents
+        docs = self.retriever.invoke(query)
         
         # Return in expected format
         return {
