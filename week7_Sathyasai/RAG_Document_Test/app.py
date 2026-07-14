@@ -144,7 +144,7 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             
             status.text("💾 Storing vectors...")
             progress.progress(80)
-            retriever = RetrievalSystem(vector_store, top_k)
+            retriever = RetrievalSystem(vector_store, vector_mgr, top_k)
             
             status.text("🤖 Initializing LLM...")
             progress.progress(90)
