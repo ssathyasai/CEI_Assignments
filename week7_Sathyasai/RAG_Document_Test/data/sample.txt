@@ -1,0 +1,37 @@
+RAG System Overview
+
+Retrieval-Augmented Generation (RAG) is a powerful technique that combines information retrieval with language generation. It allows AI systems to answer questions based on custom documents rather than relying solely on pre-trained knowledge.
+
+Key Components:
+1. Document Processing - Breaking down documents into manageable chunks
+2. Vector Embeddings - Converting text into numerical representations
+3. Vector Database - Storing embeddings for fast similarity search
+4. Retrieval System - Finding relevant chunks based on user queries
+5. Answer Generation - Using LLM to generate contextual answers
+
+Benefits of RAG:
+- Factual accuracy grounded in actual documents
+- Ability to work with private/custom data
+- Reduced hallucination compared to pure LLM responses
+- Easy updates by adding new documents
+
+Applications:
+- Enterprise knowledge bases
+- Customer support chatbots
+- Research paper analysis
+- Legal document search
+- Medical information systems
+
+Implementation Stack:
+- Embeddings: sentence-transformers (all-MiniLM-L6-v2)
+- Vector Store: FAISS for fast similarity search
+- LLM: Groq (Llama 3.1 70B) for ultra-fast inference
+- Framework: LangChain for orchestration
+- Interface: Streamlit for web UI
+
+Best Practices:
+1. Optimal chunk size: 500-1000 characters
+2. Chunk overlap: 100-200 characters for context continuity
+3. Top-K retrieval: 3-5 chunks for balanced context
+4. Temperature: 0.3 for factual responses
+5. Hybrid search: Combine semantic + keyword matching
