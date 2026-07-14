@@ -49,18 +49,54 @@ def main():
         st.success("✅ Using Groq API key from secrets")
         
         st.divider()
-        st.subheader("📊 Settings")
-        chunk_size = st.slider("Chunk Size", 50, 2000, 1000, 50)
-        chunk_overlap = st.slider("Chunk Overlap", 0, 300, 100, 50)
-        top_k = st.slider("Top-K Retrieval", 1, 10, 4)
-        temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1)
+        st.subheader("📊 Settings & Recommendations")
+        
+        # Chunk Size with recommendation
+        st.markdown("**Chunk Size** (Recommended: 1000)")
+        st.caption("Larger chunks = more context per retrieval. Good range: 500-1500")
+        chunk_size = st.slider("Chunk Size", 50, 2000, 1000, 50, key="chunk_size")
+        
+        # Chunk Overlap with recommendation
+        st.markdown("**Chunk Overlap** (Recommended: 100)")
+        st.caption("Overlap = context sharing between chunks. 10-20% of chunk size")
+        chunk_overlap = st.slider("Chunk Overlap", 0, 300, 100, 50, key="chunk_overlap")
+        
+        # Top-K with recommendation
+        st.markdown("**Top-K Retrieval** (Recommended: 4)")
+        st.caption("Number of most relevant chunks to retrieve. 3-5 is optimal")
+        top_k = st.slider("Top-K Retrieval", 1, 10, 4, key="top_k")
+        
+        # Temperature with recommendation
+        st.markdown("**Temperature** (Recommended: 0.3)")
+        st.caption("Lower = factual answers. 0.0-0.5 for RAG systems")
+        temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1, key="temperature")
+        
+        st.divider()
+        st.subheader("💡 Quick Presets")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if st.button("📋 Balanced", use_container_width=True):
+                st.session_state.chunk_size = 1000
+                st.session_state.chunk_overlap = 100
+                st.session_state.top_k = 4
+                st.session_state.temperature = 0.3
+                st.rerun()
+        
+        with col2:
+            if st.button("🎯 Precise", use_container_width=True):
+                st.session_state.chunk_size = 500
+                st.session_state.chunk_overlap = 50
+                st.session_state.top_k = 3
+                st.session_state.temperature = 0.1
+                st.rerun()
         
         st.divider()
         st.subheader("ℹ️ System Info")
-        model_info = f"**Model**: {st.session_state.model_name}\n\n**Embeddings**: TF-IDF (No Downloads)\n\n**Vector DB**: FAISS"
+        model_info = f"**Model**: {st.session_state.model_name}\n\n**Embeddings**: TF-IDF + Bigrams\n\n**Vector DB**: FAISS\n\n**Re-ranking**: Enabled"
         st.info(model_info)
         
-        if st.button("🗑️ Clear All"):
+        if st.button("🗑️ Clear All", use_container_width=True):
             st.session_state.clear()
             st.rerun()
     
