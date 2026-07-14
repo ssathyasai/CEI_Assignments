@@ -40,7 +40,7 @@ def main():
         
         st.divider()
         st.subheader("📊 Settings")
-        chunk_size = st.slider("Chunk Size", 500, 2000, 1000, 100)
+        chunk_size = st.slider("Chunk Size", 50, 2000, 1000, 50)
         chunk_overlap = st.slider("Chunk Overlap", 0, 300, 100, 50)
         top_k = st.slider("Top-K Retrieval", 1, 10, 4)
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1)
