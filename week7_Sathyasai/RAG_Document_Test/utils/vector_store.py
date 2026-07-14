@@ -1,28 +1,56 @@
 """Vector Store Management Module"""
 from typing import List
 from langchain_core.documents import Document
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.vectorstores import FAISS
-import os
-import warnings
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 import streamlit as st
 
-# Suppress warnings
-warnings.filterwarnings("ignore")
+
+class TFIDFEmbeddings:
+    """Simple TF-IDF embeddings - no model download needed"""
+    
+    def __init__(self):
+        self.vectorizer = None
+        self.embedding_dim = 384
+    
+    def embed_query(self, text: str) -> List[float]:
+        """Embed a single query"""
+        if self.vectorizer is None:
+            # Return dummy embedding if not fitted yet
+            return [0.0] * self.embedding_dim
+        
+        # Get TF-IDF vector
+        tfidf = self.vectorizer.transform([text]).toarray()[0]
+        # Pad to embedding_dim
+        if len(tfidf) < self.embedding_dim:
+            tfidf = np.pad(tfidf, (0, self.embedding_dim - len(tfidf)))
+        else:
+            tfidf = tfidf[:self.embedding_dim]
+        return tfidf.tolist()
+    
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed multiple documents"""
+        # Fit on documents first
+        self.vectorizer = TfidfVectorizer(max_features=self.embedding_dim, stop_words='english')
+        tfidf_matrix = self.vectorizer.fit_transform(texts).toarray()
+        
+        # Pad each vector to embedding_dim
+        embeddings = []
+        for vec in tfidf_matrix:
+            if len(vec) < self.embedding_dim:
+                vec = np.pad(vec, (0, self.embedding_dim - len(vec)))
+            else:
+                vec = vec[:self.embedding_dim]
+            embeddings.append(vec.tolist())
+        
+        return embeddings
 
 
 @st.cache_resource
 def get_embeddings():
-    """Use HuggingFace Inference API (free, no model download needed)"""
-    try:
-        return HuggingFaceInferenceAPIEmbeddings(
-            api_key="hf_default",
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
-    except:
-        # Fallback to basic embeddings if HF API fails
-        from langchain_community.embeddings import FakeEmbeddings
-        return FakeEmbeddings(size=384)
+    """Get cached embeddings"""
+    return TFIDFEmbeddings()
 
 
 class VectorStoreManager:
