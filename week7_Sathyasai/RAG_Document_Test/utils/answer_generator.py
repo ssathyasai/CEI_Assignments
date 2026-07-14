@@ -9,8 +9,8 @@ from langchain_core.output_parsers import StrOutputParser
 class AnswerGenerator:
     """Generates answers using Groq LLM"""
     
-    def __init__(self, retriever, api_key: str, model_name: str = "llama-3.1-70b-versatile", temperature: float = 0.3):
-        # Initialize Groq LLM
+    def __init__(self, retriever, api_key: str, model_name: str = "mixtral-8x7b-32768", temperature: float = 0.3):
+        # Initialize Groq LLM with newer model
         self.llm = ChatGroq(
             model=model_name,
             temperature=temperature,

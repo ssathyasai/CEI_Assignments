@@ -56,7 +56,7 @@ def main():
         
         st.divider()
         st.subheader("ℹ️ System Info")
-        st.info("**Model**: Llama 3.1 70B\n\n**Embeddings**: all-MiniLM-L6-v2\n\n**Vector DB**: FAISS")
+        st.info("**Model**: Mixtral 8x7B\n\n**Embeddings**: TF-IDF\n\n**Vector DB**: FAISS")
         
         if st.button("🗑️ Clear All"):
             st.session_state.clear()
@@ -109,11 +109,11 @@ def main():
         if st.session_state.doc_processed:
             col1, col2, col3 = st.columns(3)
             col1.metric("Chunk Size", f"{chunk_size} chars")
-            col1.metric("Model", "Llama 3.1 70B")
+            col1.metric("Model", "Mixtral 8x7B")
             col2.metric("Chunk Overlap", f"{chunk_overlap} chars")
             col2.metric("Vector DB", "FAISS")
             col3.metric("Top-K", top_k)
-            col3.metric("Embeddings", "384 dims")
+            col3.metric("Embeddings", "TF-IDF")
             st.divider()
             st.metric("Questions Asked", len(st.session_state.chat_history))
         else:
