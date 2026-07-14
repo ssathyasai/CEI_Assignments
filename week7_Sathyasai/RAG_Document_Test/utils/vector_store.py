@@ -4,6 +4,7 @@ from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import FAISS
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import streamlit as st
 import pickle
@@ -40,7 +41,10 @@ class TFIDFEmbeddings(Embeddings):
             max_features=self.embedding_dim,
             stop_words='english',
             lowercase=True,
-            analyzer='word'
+            analyzer='word',
+            ngram_range=(1, 2),  # Include bigrams for better context
+            min_df=1,
+            max_df=0.95
         )
         tfidf_matrix = self.vectorizer.fit_transform(texts).toarray()
         self._fitted = True
@@ -63,15 +67,50 @@ def get_embeddings():
 
 
 class VectorStoreManager:
-    """Manages vector embeddings and FAISS database"""
+    """Manages vector embeddings and FAISS database with re-ranking"""
     
     def __init__(self):
         self.embeddings = get_embeddings()
+        self.all_docs = []
     
     def create_vector_store(self, documents: List[Document]):
         """Create FAISS vector store from documents"""
+        self.all_docs = documents
         vector_store = FAISS.from_documents(documents, self.embeddings)
         return vector_store
+    
+    def rerank_documents(self, query: str, documents: List[Document], top_k: int = 4) -> List[Document]:
+        """Re-rank documents using multiple signals"""
+        if not documents:
+            return documents
+        
+        # Get query embedding
+        query_emb = np.array(self.embeddings.embed_query(query)).reshape(1, -1)
+        
+        # Get document embeddings
+        doc_embs = np.array([self.embeddings.embed_query(doc.page_content) for doc in documents])
+        
+        # Calculate similarity scores
+        similarities = cosine_similarity(query_emb, doc_embs)[0]
+        
+        # Calculate keyword overlap score
+        query_words = set(query.lower().split())
+        keyword_scores = []
+        for doc in documents:
+            doc_words = set(doc.page_content.lower().split())
+            overlap = len(query_words & doc_words) / (len(query_words) + 1)
+            keyword_scores.append(overlap)
+        
+        keyword_scores = np.array(keyword_scores)
+        
+        # Combined score (70% similarity, 30% keyword match)
+        combined_scores = 0.7 * similarities + 0.3 * keyword_scores
+        
+        # Sort by combined score
+        ranked_indices = np.argsort(combined_scores)[::-1]
+        
+        # Return top-k re-ranked documents
+        return [documents[i] for i in ranked_indices[:top_k]]
     
     def save_vector_store(self, vector_store, path: str = "faiss_index"):
         """Save vector store to disk"""
