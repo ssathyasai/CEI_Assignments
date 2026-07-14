@@ -30,17 +30,17 @@ class AnswerGenerator:
         self.llm = None
         self._init_llm()
         
-        # Create prompt template
+        # Create prompt template - improved for better answers
         self.prompt = ChatPromptTemplate.from_template(
-            """You are a helpful AI assistant. Answer the question based ONLY on the context provided.
-If the answer is not in the context, say "I cannot answer based on the provided documents."
+            """You are a helpful AI assistant. Answer the question based on the provided context.
+If the exact answer is not in the context, try to provide a helpful response using related information.
 
 Context:
 {context}
 
 Question: {question}
 
-Answer:"""
+Answer: Provide a comprehensive answer that addresses the question."""
         )
         
         # Create simple RAG chain
