@@ -5,21 +5,28 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 import os
 import warnings
+import streamlit as st
 
 # Suppress HuggingFace warnings
 warnings.filterwarnings("ignore", message=".*HF_TOKEN.*")
 warnings.filterwarnings("ignore", message=".*unauthenticated requests.*")
 
 
+@st.cache_resource
+def get_embeddings(model_name: str = "all-MiniLM-L6-v2"):
+    """Cache the embeddings model to avoid re-downloading"""
+    return HuggingFaceEmbeddings(
+        model_name=f"sentence-transformers/{model_name}",
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True}
+    )
+
+
 class VectorStoreManager:
     """Manages vector embeddings and FAISS database"""
     
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=f"sentence-transformers/{model_name}",
-            model_kwargs={'device': 'cpu'},
-            encode_kwargs={'normalize_embeddings': True}
-        )
+        self.embeddings = get_embeddings(model_name)
     
     def create_vector_store(self, documents: List[Document]):
         """Create FAISS vector store from documents"""
