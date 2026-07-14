@@ -72,26 +72,6 @@ def main():
         temperature = st.slider("Temperature", 0.0, 1.0, 0.3, 0.1, key="temperature")
         
         st.divider()
-        st.subheader("💡 Quick Presets")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("📋 Balanced", use_container_width=True):
-                st.session_state.chunk_size = 1000
-                st.session_state.chunk_overlap = 100
-                st.session_state.top_k = 4
-                st.session_state.temperature = 0.3
-                st.rerun()
-        
-        with col2:
-            if st.button("🎯 Precise", use_container_width=True):
-                st.session_state.chunk_size = 500
-                st.session_state.chunk_overlap = 50
-                st.session_state.top_k = 3
-                st.session_state.temperature = 0.1
-                st.rerun()
-        
-        st.divider()
         st.subheader("ℹ️ System Info")
         model_info = f"**Model**: {st.session_state.model_name}\n\n**Embeddings**: TF-IDF + Bigrams\n\n**Vector DB**: FAISS\n\n**Re-ranking**: Enabled"
         st.info(model_info)
