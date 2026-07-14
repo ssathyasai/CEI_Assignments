@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+*.pdf
+*.txt
+!requirements.txt
+!sample.txt
+.DS_Store
