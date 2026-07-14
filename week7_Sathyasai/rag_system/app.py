@@ -208,28 +208,7 @@ def main():
     
     # Main Content
     if not st.session_state.initialized:
-        st.info("👈 Please configure and initialize the system from the sidebar")
-        st.markdown("""
-        ### 🚀 Quick Start Guide
-        
-        **For Streamlit Cloud Users:**
-        1. Add `GROQ_API_KEY` to your Streamlit Cloud secrets
-        2. Click "Initialize System"
-        3. Upload documents and ask questions!
-        
-        **For Local Development:**
-        1. Get Groq API key from [console.groq.com](https://console.groq.com)
-        2. Enter it in the sidebar
-        3. Click "Initialize System"
-        4. Upload documents and ask questions!
-        
-        ### 📚 Features
-        - 📄 Upload PDF and text documents
-        - 🔍 Semantic search using embeddings
-        - 🧠 AI-powered answers using Groq
-        - 📊 Real-time system metrics
-        - 🎯 Context-aware responses
-        """)
+        st.warning("👈 Please configure and initialize the system from the sidebar to start using the app")
         return
     
     rag_app = st.session_state.rag_app
