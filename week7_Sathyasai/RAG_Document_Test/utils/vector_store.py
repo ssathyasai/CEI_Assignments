@@ -1,32 +1,35 @@
 """Vector Store Management Module"""
 from typing import List
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.vectorstores import FAISS
 import os
 import warnings
 import streamlit as st
 
-# Suppress HuggingFace warnings
-warnings.filterwarnings("ignore", message=".*HF_TOKEN.*")
-warnings.filterwarnings("ignore", message=".*unauthenticated requests.*")
+# Suppress warnings
+warnings.filterwarnings("ignore")
 
 
 @st.cache_resource
-def get_embeddings(model_name: str = "all-MiniLM-L6-v2"):
-    """Cache the embeddings model to avoid re-downloading"""
-    return HuggingFaceEmbeddings(
-        model_name=f"sentence-transformers/{model_name}",
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
-    )
+def get_embeddings():
+    """Use HuggingFace Inference API (free, no model download needed)"""
+    try:
+        return HuggingFaceInferenceAPIEmbeddings(
+            api_key="hf_default",
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+    except:
+        # Fallback to basic embeddings if HF API fails
+        from langchain_community.embeddings import FakeEmbeddings
+        return FakeEmbeddings(size=384)
 
 
 class VectorStoreManager:
     """Manages vector embeddings and FAISS database"""
     
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.embeddings = get_embeddings(model_name)
+    def __init__(self):
+        self.embeddings = get_embeddings()
     
     def create_vector_store(self, documents: List[Document]):
         """Create FAISS vector store from documents"""

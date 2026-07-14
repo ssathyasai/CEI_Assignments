@@ -4,10 +4,6 @@ langchain-community
 langchain-groq
 langchain-text-splitters
 langchain-core
-langchain-huggingface
 faiss-cpu
-sentence-transformers
-torch
-torchvision
 pypdf
 python-dotenv

@@ -132,10 +132,10 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             
             status.text(f"✂️ Created {len(chunks)} chunks...")
             progress.progress(40)
-            time.sleep(0.5)
             
-            status.text("🔢 Creating embeddings (downloading model on first run, may take 1-2 min)...")
+            status.text("🔢 Creating embeddings...")
             progress.progress(50)
+            
             vector_mgr = VectorStoreManager()
             
             status.text("🔢 Generating embeddings for chunks...")
@@ -158,11 +158,11 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             
             status.text("✅ Complete!")
             progress.progress(100)
-            time.sleep(0.5)
             st.success(f"✅ Processed {len(chunks)} chunks!")
             st.balloons()
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
+            st.info("💡 Tip: Try uploading a smaller document or wait and try again.")
 
 def answer_question(question, api_key):
     with st.spinner("🤔 Thinking..."):
