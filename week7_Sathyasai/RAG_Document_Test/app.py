@@ -134,14 +134,20 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             progress.progress(40)
             time.sleep(0.5)
             
-            status.text("🔢 Creating embeddings...")
-            progress.progress(60)
+            status.text("🔢 Creating embeddings (downloading model on first run, may take 1-2 min)...")
+            progress.progress(50)
             vector_mgr = VectorStoreManager()
+            
+            status.text("🔢 Generating embeddings for chunks...")
+            progress.progress(60)
             vector_store = vector_mgr.create_vector_store(chunks)
             
             status.text("💾 Storing vectors...")
             progress.progress(80)
             retriever = RetrievalSystem(vector_store, top_k)
+            
+            status.text("🤖 Initializing LLM...")
+            progress.progress(90)
             answer_gen = AnswerGenerator(retriever.retriever, api_key, temperature=temp)
             
             st.session_state.vector_store = vector_store
