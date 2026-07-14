@@ -1,13 +1,14 @@
 """Vector Store Management Module"""
 from typing import List
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 from langchain_community.vectorstores import FAISS
 from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 import streamlit as st
 
 
-class TFIDFEmbeddings:
+class TFIDFEmbeddings(Embeddings):
     """Simple TF-IDF embeddings - no model download needed"""
     
     def __init__(self):
@@ -20,8 +21,13 @@ class TFIDFEmbeddings:
             # Return dummy embedding if not fitted yet
             return [0.0] * self.embedding_dim
         
-        # Get TF-IDF vector
-        tfidf = self.vectorizer.transform([text]).toarray()[0]
+        try:
+            # Get TF-IDF vector
+            tfidf = self.vectorizer.transform([text]).toarray()[0]
+        except:
+            # If text has unknown words, return dummy
+            return [0.0] * self.embedding_dim
+        
         # Pad to embedding_dim
         if len(tfidf) < self.embedding_dim:
             tfidf = np.pad(tfidf, (0, self.embedding_dim - len(tfidf)))
@@ -32,7 +38,12 @@ class TFIDFEmbeddings:
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed multiple documents"""
         # Fit on documents first
-        self.vectorizer = TfidfVectorizer(max_features=self.embedding_dim, stop_words='english')
+        self.vectorizer = TfidfVectorizer(
+            max_features=self.embedding_dim,
+            stop_words='english',
+            lowercase=True,
+            analyzer='word'
+        )
         tfidf_matrix = self.vectorizer.fit_transform(texts).toarray()
         
         # Pad each vector to embedding_dim
