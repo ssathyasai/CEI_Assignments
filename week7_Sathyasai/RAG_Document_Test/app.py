@@ -1,7 +1,12 @@
 """RAG Document Q&A System - Streamlit App with Groq"""
 import streamlit as st
 import time
+import os
 from utils import DocumentProcessor, VectorStoreManager, RetrievalSystem, AnswerGenerator
+
+# Set HF_TOKEN from secrets if available (suppress HuggingFace warnings)
+if "HF_TOKEN" in st.secrets:
+    os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 
 # Page config
 st.set_page_config(page_title="RAG Q&A System", page_icon="📚", layout="wide")
