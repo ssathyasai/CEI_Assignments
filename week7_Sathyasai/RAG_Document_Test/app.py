@@ -30,7 +30,13 @@ def main():
     # Sidebar
     with st.sidebar:
         st.header("⚙️ Configuration")
-        api_key = st.text_input("Groq API Key", type="password", help="Get free key at console.groq.com")
+        
+        # Get API key from secrets or allow manual input
+        if "GROQ_API_KEY" in st.secrets:
+            api_key = st.secrets["GROQ_API_KEY"]
+            st.success("✅ Using API key from secrets")
+        else:
+            api_key = st.text_input("Groq API Key", type="password", help="Get free key at console.groq.com")
         
         st.divider()
         st.subheader("📊 Settings")
