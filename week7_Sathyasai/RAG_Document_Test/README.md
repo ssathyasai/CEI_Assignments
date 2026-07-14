@@ -4,7 +4,7 @@ A production-ready RAG system that answers questions from your documents using G
 
 ## 🎯 Live Demo
 
-**Status**: Coming soon on Streamlit Cloud  
+**Link**:https://ceiassignments-zp.streamlit.app/
 **Try Locally**: `streamlit run app.py`
 
 ## 🚀 Quick Start
