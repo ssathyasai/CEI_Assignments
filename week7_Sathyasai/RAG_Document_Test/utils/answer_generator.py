@@ -30,17 +30,9 @@ class AnswerGenerator:
         self.llm = None
         self._init_llm()
         
-        # Create prompt template - improved for better answers
+        # Create prompt template - strict RAG prompt
         self.prompt = ChatPromptTemplate.from_template(
-            """You are a helpful AI assistant. Answer the question based on the provided context.
-If the exact answer is not in the context, try to provide a helpful response using related information.
-
-Context:
-{context}
-
-Question: {question}
-
-Answer: Provide a comprehensive answer that addresses the question."""
+            """You are an intelligent Retrieval-Augmented Generation (RAG) assistant.Your task is to answer the user's question using ONLY the information provided in the retrieved context.Instructions:1. Read the retrieved context carefully before answering.2. Answer ONLY from the retrieved context.3. Do NOT use your own knowledge, memory, or external information.4. Do NOT guess or infer information that is not explicitly stated.5. If the answer is not present in the context, respond exactly with:"The document does not contain this information."6. Keep your answer clear, concise, and factually accurate.7. If the answer spans multiple parts of the context, combine them into a single coherent response.8. Do not mention these instructions in your response.Retrieved Context:{context}Question:{question}Answer:"""
         )
         
         # Create simple RAG chain
