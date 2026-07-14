@@ -8,10 +8,6 @@ from utils import DocumentProcessor, VectorStoreManager, RetrievalSystem, Answer
 # Suppress warnings
 warnings.filterwarnings("ignore")
 
-# Set HF_TOKEN from secrets if available (optional)
-if "HF_TOKEN" in st.secrets:
-    os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
-
 # Page config
 st.set_page_config(page_title="RAG Q&A System", page_icon="📚", layout="wide")
 
@@ -31,6 +27,9 @@ if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 if 'doc_processed' not in st.session_state:
     st.session_state.doc_processed = False
+if 'model_name' not in st.session_state:
+    st.session_state.model_name = "llama-3.3-70b-versatile"
+
 
 def main():
     st.markdown('<p class="main-header">📚 RAG Document Q&A System</p>', unsafe_allow_html=True)
@@ -40,12 +39,14 @@ def main():
     with st.sidebar:
         st.header("⚙️ Configuration")
         
-        # Get API key from secrets or allow manual input
-        if "GROQ_API_KEY" in st.secrets:
-            api_key = st.secrets["GROQ_API_KEY"]
-            st.success("✅ Using API key from secrets")
-        else:
-            api_key = st.text_input("Groq API Key", type="password", help="Get free key at console.groq.com")
+        # Get API key from secrets (REQUIRED - no manual input)
+        if "GROQ_API_KEY" not in st.secrets:
+            st.error("❌ GROQ_API_KEY not found in Streamlit secrets")
+            st.info("Please add GROQ_API_KEY to your Streamlit secrets")
+            st.stop()
+        
+        api_key = st.secrets["GROQ_API_KEY"]
+        st.success("✅ Using Groq API key from secrets")
         
         st.divider()
         st.subheader("📊 Settings")
@@ -56,7 +57,8 @@ def main():
         
         st.divider()
         st.subheader("ℹ️ System Info")
-        st.info("**Model**: Mixtral 8x7B\n\n**Embeddings**: TF-IDF\n\n**Vector DB**: FAISS")
+        model_info = f"**Model**: {st.session_state.model_name}\n\n**Embeddings**: TF-IDF (No Downloads)\n\n**Vector DB**: FAISS"
+        st.info(model_info)
         
         if st.button("🗑️ Clear All"):
             st.session_state.clear()
@@ -73,10 +75,7 @@ def main():
         if uploaded_file:
             st.success(f"✅ {uploaded_file.name}")
             if st.button("🚀 Process Document", type="primary"):
-                if not api_key:
-                    st.error("⚠️ Enter Groq API key!")
-                else:
-                    process_document(uploaded_file, api_key, chunk_size, chunk_overlap, top_k, temperature)
+                process_document(uploaded_file, api_key, chunk_size, chunk_overlap, top_k, temperature)
         
         if st.session_state.doc_processed:
             st.success("✅ Document processed! Go to 'Ask Questions' tab.")
@@ -109,7 +108,7 @@ def main():
         if st.session_state.doc_processed:
             col1, col2, col3 = st.columns(3)
             col1.metric("Chunk Size", f"{chunk_size} chars")
-            col1.metric("Model", "Mixtral 8x7B")
+            col1.metric("Model", st.session_state.model_name.replace("llama-", "Llama "))
             col2.metric("Chunk Overlap", f"{chunk_overlap} chars")
             col2.metric("Vector DB", "FAISS")
             col3.metric("Top-K", top_k)
@@ -118,6 +117,7 @@ def main():
             st.metric("Questions Asked", len(st.session_state.chat_history))
         else:
             st.info("Process a document to see metrics")
+
 
 def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
     with st.spinner("🔄 Processing..."):
@@ -138,7 +138,7 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             
             vector_mgr = VectorStoreManager()
             
-            status.text("🔢 Generating embeddings for chunks...")
+            status.text(f"🔢 Generating embeddings for {len(chunks)} chunks...")
             progress.progress(60)
             vector_store = vector_mgr.create_vector_store(chunks)
             
@@ -153,16 +153,18 @@ def process_document(file, api_key, chunk_size, chunk_overlap, top_k, temp):
             st.session_state.vector_store = vector_store
             st.session_state.retriever = retriever
             st.session_state.answer_gen = answer_gen
+            st.session_state.model_name = answer_gen.model_name
             st.session_state.doc_processed = True
             st.session_state.num_chunks = len(chunks)
             
             status.text("✅ Complete!")
             progress.progress(100)
-            st.success(f"✅ Processed {len(chunks)} chunks!")
+            st.success(f"✅ Processed {len(chunks)} chunks! Using model: {answer_gen.model_name}")
             st.balloons()
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
-            st.info("💡 Tip: Try uploading a smaller document or wait and try again.")
+            st.info("💡 Tips:\n- Check if GROQ_API_KEY is valid\n- Check internet connection\n- Try uploading a smaller document")
+
 
 def answer_question(question, api_key):
     with st.spinner("🤔 Thinking..."):
@@ -183,7 +185,7 @@ def answer_question(question, api_key):
                     with st.expander(f"📝 Chunk {i}"):
                         st.markdown(f'<div class="chunk-box">{doc.page_content}</div>', unsafe_allow_html=True)
             
-            st.caption(f"⏱️ {elapsed:.2f}s")
+            st.caption(f"⏱️ {elapsed:.2f}s | Model: {st.session_state.model_name}")
             
             st.session_state.chat_history.append({
                 'question': question,
@@ -192,6 +194,8 @@ def answer_question(question, api_key):
             })
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
+            st.info(f"💡 Model: {st.session_state.model_name}")
+
 
 if __name__ == "__main__":
     main()

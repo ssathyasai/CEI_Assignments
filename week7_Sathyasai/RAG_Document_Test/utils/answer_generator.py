@@ -9,16 +9,26 @@ from langchain_core.output_parsers import StrOutputParser
 class AnswerGenerator:
     """Generates answers using Groq LLM"""
     
-    def __init__(self, retriever, api_key: str, model_name: str = "mixtral-8x7b-32768", temperature: float = 0.3):
-        # Initialize Groq LLM with newer model
-        self.llm = ChatGroq(
-            model=model_name,
-            temperature=temperature,
-            groq_api_key=api_key,
-            max_tokens=1024
-        )
-        
+    # List of models to try in order
+    AVAILABLE_MODELS = [
+        "llama-3.3-70b-versatile",    # Current primary model
+        "llama-3.1-8b-instant",        # Lightweight fallback
+    ]
+    
+    def __init__(self, retriever, api_key: str, model_name: str = None, temperature: float = 0.3):
         self.retriever = retriever
+        self.temperature = temperature
+        self.groq_api_key = api_key
+        
+        # Use provided model or try defaults
+        if model_name:
+            self.model_name = model_name
+        else:
+            self.model_name = self.AVAILABLE_MODELS[0]
+        
+        # Initialize LLM - will be created lazily on first use
+        self.llm = None
+        self._init_llm()
         
         # Create prompt template
         self.prompt = ChatPromptTemplate.from_template(
@@ -44,10 +54,51 @@ Answer:"""
             | StrOutputParser()
         )
     
+    def _init_llm(self):
+        """Initialize Groq LLM with model"""
+        self.llm = ChatGroq(
+            model=self.model_name,
+            temperature=self.temperature,
+            groq_api_key=self.groq_api_key,
+            max_tokens=1024,
+            timeout=60
+        )
+    
+    def _try_fallback_model(self):
+        """Try next available model on failure"""
+        current_idx = self.AVAILABLE_MODELS.index(self.model_name)
+        if current_idx < len(self.AVAILABLE_MODELS) - 1:
+            self.model_name = self.AVAILABLE_MODELS[current_idx + 1]
+            self._init_llm()
+            return True
+        return False
+    
     def generate_answer(self, query: str) -> Dict[str, Any]:
         """Generate answer for query"""
-        # Get answer
-        answer = self.rag_chain.invoke(query)
+        try:
+            # Get answer
+            answer = self.rag_chain.invoke(query)
+        except Exception as e:
+            error_msg = str(e).lower()
+            # Check if model is decommissioned
+            if "decommissioned" in error_msg or "model_not_found" in error_msg.lower():
+                if self._try_fallback_model():
+                    # Recreate chain with new model
+                    def format_docs(docs):
+                        return "\n\n".join(doc.page_content for doc in docs)
+                    
+                    self.rag_chain = (
+                        {"context": self.retriever | format_docs, "question": RunnablePassthrough()}
+                        | self.prompt
+                        | self.llm
+                        | StrOutputParser()
+                    )
+                    # Try again with fallback
+                    answer = self.rag_chain.invoke(query)
+                else:
+                    raise Exception(f"All models unavailable. Last error: {str(e)}")
+            else:
+                raise
         
         # Get source documents
         docs = self.retriever.get_relevant_documents(query)
