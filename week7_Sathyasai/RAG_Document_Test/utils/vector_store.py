@@ -4,18 +4,17 @@ from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 import os
+import warnings
+
+# Suppress HuggingFace warnings
+warnings.filterwarnings("ignore", message=".*HF_TOKEN.*")
+warnings.filterwarnings("ignore", message=".*unauthenticated requests.*")
 
 
 class VectorStoreManager:
     """Manages vector embeddings and FAISS database"""
     
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        # Suppress HuggingFace warnings by setting token if available
-        if "HF_TOKEN" in os.environ:
-            hf_token = os.environ["HF_TOKEN"]
-        else:
-            hf_token = None
-            
         self.embeddings = HuggingFaceEmbeddings(
             model_name=f"sentence-transformers/{model_name}",
             model_kwargs={'device': 'cpu'},

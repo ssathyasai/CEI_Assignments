@@ -2,9 +2,13 @@
 import streamlit as st
 import time
 import os
+import warnings
 from utils import DocumentProcessor, VectorStoreManager, RetrievalSystem, AnswerGenerator
 
-# Set HF_TOKEN from secrets if available (suppress HuggingFace warnings)
+# Suppress warnings
+warnings.filterwarnings("ignore")
+
+# Set HF_TOKEN from secrets if available (optional)
 if "HF_TOKEN" in st.secrets:
     os.environ["HF_TOKEN"] = st.secrets["HF_TOKEN"]
 
